@@ -16,7 +16,8 @@ Quick start
    export PGUSER=your_db_user
    export PGPASSWORD=your_db_password
 ```
-replace your_db_user with you PostgreSQL username
+replace your_db_user with your PostgreSQL username
+
 replace your_db_password with you PostgreSQL password
 
 3. Run the app:
