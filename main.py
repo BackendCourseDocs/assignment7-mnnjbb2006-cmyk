@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Depends
-import psycopg
+from fastapi import FastAPI, Depends, HTTPException
 from psycopg_pool import ConnectionPool
 import os
 from pydantic import BaseModel, Field
-from typing import Optional, Annotated, List
+from typing import Optional, Annotated
 from psycopg.rows import dict_row
 
 pool: Optional[ConnectionPool] = None
@@ -70,3 +69,11 @@ def add_book(book: BookBase, conn=Depends(get_db)) -> dict:
                     (book.title, book.author, book.year, book.publisher))
         book_id = cur.fetchone()[0]
     return {"id": book_id}
+
+@app.delete("/delete/{book_id}")
+def delete_book(book_id: int, conn=Depends(get_db)) -> dict:
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM books WHERE id = %s", (book_id,))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Book not found")
+        return {"status": "success"}
