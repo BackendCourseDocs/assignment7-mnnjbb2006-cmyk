@@ -63,6 +63,13 @@ def startup():
         with pool.connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(create_table_sql)
+                cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm;")
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS books_title_trgm_idx ON books USING gin (lower(title) gin_trgm_ops);"
+                )
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS books_author_trgm_idx ON books USING gin (lower(author) gin_trgm_ops);"
+                )
             conn.commit()
     except Exception as e:
         raise RuntimeError(f"Connection to database failed: {e}")
