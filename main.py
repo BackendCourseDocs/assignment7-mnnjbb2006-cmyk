@@ -104,6 +104,7 @@ def update_book_cover(book_id: int, cover_image: UploadFile, conn=Depends(get_db
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Book not found")
         cover_path = f"covers/{book_id}"
+        os.makedirs(os.path.dirname(cover_path), exist_ok=True)
         with open(cover_path, "wb") as f:
             f.write(cover_image.file.read())
         updated_book = Book(**dict(cur.fetchone()))
@@ -111,3 +112,9 @@ def update_book_cover(book_id: int, cover_image: UploadFile, conn=Depends(get_db
         cur.execute("UPDATE books SET cover_path = %s WHERE id = %s",
                     (updated_book.cover_path, book_id))
         return updated_book
+
+@app.on_event("shutdown")
+def shutdown():
+    global pool
+    if pool:
+        pool.close()
