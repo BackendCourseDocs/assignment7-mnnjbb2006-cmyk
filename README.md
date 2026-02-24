@@ -20,10 +20,11 @@ replace your_db_user with you PostgreSQL username
 replace your_db_password with you PostgreSQL password
 
 3. Run the app:
-   fastapi dev main.py
+  uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 Notes
 - On startup the app will attempt to create the `books` table if it does not exist.
+- The app also attempts to enable the `pg_trgm` extension and create GIN trigram indexes on `lower(title)` and `lower(author)` to accelerate case-insensitive substring searches (queries using `ILIKE '%...%'`). Creating the extension requires appropriate DB privileges; if your managed/hosted database does not allow `CREATE EXTENSION` from the application, create the extension and indexes as part of provisioning or run them manually as a DB admin.
 - Cover images are written to `covers/<book_id>` (no extension by default).
 - Keep `main.py` as a single app entrypoint unless you intentionally refactor lifecycle (pool created on startup, closed on shutdown).
 

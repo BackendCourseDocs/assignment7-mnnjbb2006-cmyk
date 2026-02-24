@@ -16,6 +16,13 @@ What the assistant should know about architecture and patterns:
 - Table creation SQL runs on startup if the `books` table does not exist. Field constraints mirror Pydantic validators (e.g. title length, year range).
 - Cover uploads: `UploadFile` is read and written directly to `covers/<book_id>`; the DB stores the `cover_path` text.
 
+Indexes and case-insensitive substring search (pg_trgm)
+- The app enables the PostgreSQL `pg_trgm` extension and creates GIN trigram indexes on the lowercased `title` and `author` columns during startup. These expression indexes use `lower(title)` and `lower(author)` with `gin_trgm_ops` to accelerate case-insensitive substring searches using `ILIKE '%...%'` or `lower(column) LIKE '%%...%%'` patterns.
+- Important: creating extensions requires appropriate database privileges. On many hosted DB services you need a superuser or an admin role to run `CREATE EXTENSION pg_trgm`. If your environment doesn't allow creating extensions from the application, create the extension and indexes manually as part of your DB provisioning process (for example in a migration or the DB admin console).
+
+Where in the code the indexes are created
+- The `CREATE EXTENSION` and `CREATE INDEX` statements are executed in `startup()` in `main.py` immediately after the `CREATE TABLE ...` statement and before `conn.commit()` is called. This ensures the table exists when indexes are created. It's acceptable to run the extension/index creation in the same transaction as the table creation; alternatively you may run them after commit or separately during DB provisioning.
+
 Environment and run/debug commands (discoverable from code):
 - Required environment variables: `PGHOST` (default `localhost`), `PGPORT` (default `5432`), `PGDATABASE` (default `books`), `PGUSER`, `PGPASSWORD`.
 - To run locally (common): use `uvicorn main:app --reload --host 0.0.0.0 --port 8000`.
