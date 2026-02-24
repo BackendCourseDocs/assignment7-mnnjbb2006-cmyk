@@ -8,10 +8,10 @@ from psycopg.rows import dict_row
 pool: Optional[ConnectionPool] = None
 
 class BookBase(BaseModel):
-     title: Annotated[str, Field(min_length=3, max_length=100)]
-     author: Annotated[str, Field(min_length=3, max_length=100)]
+     title: Annotated[str, Field(min_length=3, max_length=50)]
+     author: Annotated[str, Field(min_length=3, max_length=50)]
      year: Annotated[int, Field(gt=1000, le=2026)]
-     publisher: Annotated[str, Field(min_length=3, max_length=100)]
+     publisher: Annotated[str, Field(min_length=3, max_length=50)]
 
 
 class Book(BookBase):
@@ -20,12 +20,12 @@ class Book(BookBase):
 
 
 class BookUpdate(BaseModel):
-     title: Optional[Annotated[str, Field(min_length=3, max_length=100)]] = None
+     title: Optional[Annotated[str, Field(min_length=3, max_length=50)]] = None
      author: Optional[Annotated[str, Field(
-          min_length=3, max_length=100)]] = None
+          min_length=3, max_length=50)]] = None
      year: Optional[Annotated[int, Field(min=1000, max=2026)]] = None
      publisher: Optional[Annotated[str, Field(
-          min_length=3, max_length=100)]] = None
+          min_length=3, max_length=50)]] = None
 
 app = FastAPI()
 
@@ -49,8 +49,23 @@ def startup():
             max_size=10,
             open=True
         )
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS books (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(50) NOT NULL CHECK (char_length(title) >= 3),
+            author VARCHAR(50) NOT NULL CHECK (char_length(author) >= 3),
+            year INT NOT NULL CHECK (year > 1000 AND year <= 2026),
+            publisher VARCHAR(50) NOT NULL CHECK (char_length(publisher) >= 3),
+            cover_path TEXT
+        );
+        """
+
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(create_table_sql)
+            conn.commit()
     except Exception as e:
-        return {"Connection to database failed":e}
+        raise RuntimeError(f"Connection to database failed: {e}")
 
 @app.get("/")
 def find(q: Annotated[str, Field(min_length=3, max_length=50)], conn=Depends(get_db)) -> dict:
