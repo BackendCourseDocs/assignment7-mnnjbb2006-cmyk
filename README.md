@@ -20,7 +20,7 @@ replace your_db_user with you PostgreSQL username
 replace your_db_password with you PostgreSQL password
 
 3. Run the app:
-  uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   fastapi dev main.py
 
 Notes
 - On startup the app will attempt to create the `books` table if it does not exist.
