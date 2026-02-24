@@ -7,6 +7,26 @@ from typing import Optional, Annotated
 
 pool: Optional[ConnectionPool] = None
 
+class BookBase(BaseModel):
+     title: Annotated[str, Field(min_length=3, max_length=100)]
+     author: Annotated[str, Field(min_length=3, max_length=100)]
+     year: Annotated[int, Field(gt=1000, le=2026)]
+     publisher: Annotated[str, Field(min_length=3, max_length=100)]
+
+
+class Book(BookBase):
+     book_id: int
+     coverPath: Optional[str] = None
+
+
+class BookUpdate(BaseModel):
+     title: Optional[Annotated[str, Field(min_length=3, max_length=100)]] = None
+     author: Optional[Annotated[str, Field(
+          min_length=3, max_length=100)]] = None
+     year: Optional[Annotated[int, Field(min=1000, max=2026)]] = None
+     publisher: Optional[Annotated[str, Field(
+          min_length=3, max_length=100)]] = None
+
 app = FastAPI()
 
 @app.on_event("startup")
