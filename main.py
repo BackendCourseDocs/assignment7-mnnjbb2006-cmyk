@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile
 from psycopg_pool import ConnectionPool
 import os
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ class BookBase(BaseModel):
 
 class Book(BookBase):
     id: int
-    coverPath: Optional[str] = None
+    cover_path: Optional[str] = None
 
 
 class BookUpdate(BaseModel):
@@ -70,7 +70,7 @@ def add_book(book: BookBase, conn=Depends(get_db)) -> dict:
         book_id = cur.fetchone()[0]
     return {"id": book_id}
 
-@app.delete("/delete/{book_id}")
+@app.delete("/delete/{book_id}/")
 def delete_book(book_id: int, conn=Depends(get_db)) -> dict:
     with conn.cursor() as cur:
         cur.execute("DELETE FROM books WHERE id = %s", (book_id,))
@@ -78,7 +78,7 @@ def delete_book(book_id: int, conn=Depends(get_db)) -> dict:
             raise HTTPException(status_code=404, detail="Book not found")
         return {"status": "success"}
 
-@app.put("/update/{book_id}", response_model=Book)
+@app.put("/update/{book_id}/", response_model=Book)
 def update_book(book_id: int, book: BookUpdate, conn=Depends(get_db)) -> Book:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute("SELECT * FROM books WHERE id = %s", (book_id,))
@@ -95,4 +95,19 @@ def update_book(book_id: int, book: BookUpdate, conn=Depends(get_db)) -> Book:
             updated_book.publisher = book.publisher
         cur.execute("UPDATE books SET title = %s, author = %s, year = %s, publisher = %s WHERE id = %s",
                     (updated_book.title, updated_book.author, updated_book.year, updated_book.publisher, book_id))
+        return updated_book
+
+@app.put("/cover/{book_id}/", response_model=Book)
+def update_book_cover(book_id: int, cover_image: UploadFile, conn=Depends(get_db)) -> Book:
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("SELECT * FROM books WHERE id = %s", (book_id,))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Book not found")
+        cover_path = f"covers/{book_id}"
+        with open(cover_path, "wb") as f:
+            f.write(cover_image.file.read())
+        updated_book = Book(**dict(cur.fetchone()))
+        updated_book.cover_path = cover_path
+        cur.execute("UPDATE books SET cover_path = %s WHERE id = %s",
+                    (updated_book.cover_path, book_id))
         return updated_book
