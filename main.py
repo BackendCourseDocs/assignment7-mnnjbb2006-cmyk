@@ -8,10 +8,10 @@ from psycopg.rows import dict_row
 pool: Optional[ConnectionPool] = None
 
 class BookBase(BaseModel):
-     title: Annotated[str, Field(min_length=3, max_length=100)]
-     author: Annotated[str, Field(min_length=3, max_length=100)]
+     title: Annotated[str, Field(min_length=3, max_length=255)]
+     author: Annotated[str, Field(min_length=3, max_length=255)]
      year: Annotated[int, Field(gt=1000, le=2026)]
-     publisher: Annotated[str, Field(min_length=3, max_length=100)]
+     publisher: Annotated[str, Field(min_length=3, max_length=255)]
 
 
 class Book(BookBase):
@@ -20,12 +20,12 @@ class Book(BookBase):
 
 
 class BookUpdate(BaseModel):
-     title: Optional[Annotated[str, Field(min_length=3, max_length=100)]] = None
+     title: Optional[Annotated[str, Field(min_length=3, max_length=255)]] = None
      author: Optional[Annotated[str, Field(
-          min_length=3, max_length=100)]] = None
+          min_length=3, max_length=255)]] = None
      year: Optional[Annotated[int, Field(min=1000, max=2026)]] = None
      publisher: Optional[Annotated[str, Field(
-          min_length=3, max_length=100)]] = None
+          min_length=3, max_length=255)]] = None
 
 app = FastAPI()
 
@@ -52,10 +52,10 @@ def startup():
         create_table_sql = """
         CREATE TABLE IF NOT EXISTS books (
             id SERIAL PRIMARY KEY,
-            title VARCHAR(100) NOT NULL CHECK (char_length(title) >= 3),
-            author VARCHAR(100) NOT NULL CHECK (char_length(author) >= 3),
+            title VARCHAR(255) NOT NULL CHECK (char_length(title) >= 3),
+            author VARCHAR(255) NOT NULL CHECK (char_length(author) >= 3),
             year INT NOT NULL CHECK (year > 1000 AND year <= 2026),
-            publisher VARCHAR(100) NOT NULL CHECK (char_length(publisher) >= 3),
+            publisher VARCHAR(255) NOT NULL CHECK (char_length(publisher) >= 3),
             cover_path TEXT
         );
         """
@@ -75,7 +75,7 @@ def startup():
         raise RuntimeError(f"Connection to database failed: {e}")
 
 @app.get("/")
-def find(q: Annotated[str, Field(min_length=3, max_length=100)], conn=Depends(get_db)) -> dict:
+def find(q: Annotated[str, Field(min_length=3, max_length=255)], conn=Depends(get_db)) -> dict:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute("SELECT * FROM books WHERE title ILIKE %s OR author ILIKE %s LIMIT 10", (f"%{q}%", f"%{q}%",))
         rows = cur.fetchall()
