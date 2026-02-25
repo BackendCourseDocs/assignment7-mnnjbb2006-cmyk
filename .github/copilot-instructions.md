@@ -1,3 +1,4 @@
+```instructions
 # Project Guidelines
 
 This repository is a small Python API project. The instructions below help AI coding agents be productive here.
@@ -34,3 +35,11 @@ This repository is a small Python API project. The instructions below help AI co
 - Dependencies: [requirements.txt](requirements.txt)
 
 If anything here is unclear or incomplete, tell me which area to expand and I will update this file.
+
+## API Endpoints
+- **`/author_count/`**: GET — search authors and return counts.
+  - **Query param**: `q` (string, min length 3) — partial, case-insensitive match against `author`.
+  - **Behavior**: returns JSON with a top-level `author_counts` mapping where keys are author names and values are integer counts. Example: {"author_counts": {"Agatha Christie": 12, "Arthur Conan Doyle": 5}}.
+  - **Implementation notes for agents**: Use a parameterized SQL query (e.g. `SELECT author, COUNT(*) FROM books WHERE author ILIKE $1 GROUP BY author`) and return a Python dict mapping author -> count. Keep validation aligned with `main.py` (min length 3).
+
+```

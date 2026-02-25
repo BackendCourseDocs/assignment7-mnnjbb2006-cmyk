@@ -138,8 +138,8 @@ async def update_book_cover(book_id: int, cover_image: UploadFile) -> Book:
 @app.get("/author_count/")
 async def author_count(q: Annotated[str, Field(min_length=3, max_length=255)]) -> dict:
     async with app.state.pool.acquire() as conn:
-        rows = await conn.fetch("SELECT author, COUNT(*) AS count FROM books WHERE author ILIKE $1 GROUP BY author", f"%{q}%")
-        d = {r["author"]: r["count"] for r in rows}
+        rows = await conn.fetch("SELECT author, COUNT(*) FROM books WHERE author ILIKE $1 GROUP BY author", f"%{q}%")
+        d = {k:v for k,v in rows}
         return d
 
 @app.on_event("shutdown")

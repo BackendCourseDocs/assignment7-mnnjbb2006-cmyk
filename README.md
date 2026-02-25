@@ -79,6 +79,8 @@ fastapi dev main.py
 
 ## API (brief)
 - GET /?q=term — search by title or author (min length 3) — implemented by [`find`](main.py)
+ - GET /?q=term — search by title or author (min length 3) — implemented by [`find`](main.py)
+ - GET /author_count/?q=term — search authors (min length 3) and return a mapping of author name to book count — implemented by [`author_count`](main.py)
 - POST /add/ — add book JSON body matching [`BookBase`](main.py)
 - DELETE /delete/{book_id}/ — delete a book — [`delete_book`](main.py)
 - PUT /update/{book_id}/ — partial update with [`BookUpdate`](main.py)
@@ -88,6 +90,9 @@ Examples:
 ```bash
 # search
 curl "http://127.0.0.1:8000/?q=tolkien"
+
+# get author counts
+curl "http://127.0.0.1:8000/author_count/?q=Agatha"
 
 # add
 curl -X POST "http://127.0.0.1:8000/add/" -H "Content-Type: application/json" \
